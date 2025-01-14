@@ -1,0 +1,45 @@
+﻿name: .NET Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Publish console app
+        run: |
+          dotnet publish Adrien.Sablayrolles.ObjectDetection.Console \
+            --configuration Release \
+            --runtime win10-x64 \
+            --self-contained \
+            -p:PublishSingleFile=true \
+            -o ./publish
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: console-app
+          path: ./publish
